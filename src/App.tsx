@@ -92,51 +92,56 @@ export const App: React.FC = () => {
         const created = await todoApi.addTodo(newTodo);
 
         setTodosFromServer(prev => [...prev, created]);
-        // focusFormInput();
       } catch {
         addErrorMessage('Unable to add a todo', true);
         throw new Error();
       } finally {
         setTempTodo(null);
+        setTimeout(focusFormInput, 0);
       }
     },
     [addErrorMessage],
   );
 
-  const deleteTodo = async (id: number) => {
-    addLoadingId(id);
-    try {
-      await todoApi.deleteTodo(id);
+  const deleteTodo = useCallback(
+    async (id: number) => {
+      addLoadingId(id);
+      try {
+        await todoApi.deleteTodo(id);
 
-      setTodosFromServer(prev => prev.filter(todo => todo.id !== id));
-      focusFormInput();
-    } catch (error) {
-      addErrorMessage('Unable to delete a todo', true);
-      throw new Error();
-    } finally {
-      removeLoadingId(id);
-    }
-  };
+        setTodosFromServer(prev => prev.filter(todo => todo.id !== id));
+        focusFormInput();
+      } catch (error) {
+        addErrorMessage('Unable to delete a todo', true);
+        throw new Error();
+      } finally {
+        removeLoadingId(id);
+      }
+    },
+    [addErrorMessage],
+  );
 
-  const updateTodo = async (
-    id: number,
-    data: Partial<Pick<Todo, 'title' | 'completed'>>,
-  ) => {
-    addLoadingId(id);
-    try {
-      const updatedTodo = await todoApi.updateTodo(id, data);
+  const updateTodo = useCallback(
+    async (id: number, data: Partial<Pick<Todo, 'title' | 'completed'>>) => {
+      addLoadingId(id);
+      try {
+        const updatedTodo = await todoApi.updateTodo(id, data);
 
-      setTodosFromServer(prev =>
-        prev.map(todo => (todo.id === id ? { ...todo, ...updatedTodo } : todo)),
-      );
-    } catch (error) {
-      addErrorMessage('Unable to update a todo', true);
+        setTodosFromServer(prev =>
+          prev.map(todo =>
+            todo.id === id ? { ...todo, ...updatedTodo } : todo,
+          ),
+        );
+      } catch (error) {
+        addErrorMessage('Unable to update a todo', true);
 
-      throw new Error();
-    } finally {
-      removeLoadingId(id);
-    }
-  };
+        throw new Error();
+      } finally {
+        removeLoadingId(id);
+      }
+    },
+    [addErrorMessage],
+  );
 
   useEffect(() => {
     getTodosFromServer();

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Todo } from '../types/Todo';
 import { filterTodo } from '../Services/Todo';
 import classNames from 'classnames';
@@ -28,10 +28,6 @@ const TodoFormComponent: React.FC<Props> = ({
     [todos],
   );
 
-  useEffect(() => {
-    inputRef?.current?.focus();
-  }, [inputRef, isSubmited]);
-
   const resetForm = () => {
     setQuery('');
   };
@@ -57,7 +53,6 @@ const TodoFormComponent: React.FC<Props> = ({
     } catch {
     } finally {
       setIsSubmited(false);
-      inputRef?.current?.focus();
     }
   };
 
