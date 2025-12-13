@@ -1,9 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import classNames from 'classnames';
 import { FilterTodo } from '../types/FilterTodo';
-import { Todo } from '../types/Todo';
 import { filterTodo } from '../Services/Todo';
-import { TodoContext } from '../Contexts/TodoContext';
+import { useTodoData } from '../hooks/useTodoData';
+import { useTodoUI } from '../hooks/useTodoUI';
 
 type Filter = {
   label: string;
@@ -12,17 +12,10 @@ type Filter = {
   filter: FilterTodo;
 };
 
-type Props = {
-  currentFilter: FilterTodo;
-  todos: Todo[];
-  onChangeFilter: (filter: FilterTodo) => void;
-};
+export const TodoFooter: React.FC = () => {
+  const { todos, deleteTodo } = useTodoData();
+  const { filter, setFilter } = useTodoUI();
 
-const TodoFooterComponent: React.FC<Props> = ({
-  currentFilter,
-  todos,
-  onChangeFilter,
-}) => {
   const [isStartDeleting, setIsStartDeleting] = useState(false);
 
   const filters: Filter[] = [
@@ -45,7 +38,6 @@ const TodoFooterComponent: React.FC<Props> = ({
       filter: FilterTodo.completed,
     },
   ];
-  const { onDeleteTodo } = useContext(TodoContext);
 
   const completedTodos = React.useMemo(
     () => filterTodo(todos, FilterTodo.completed),
@@ -58,7 +50,7 @@ const TodoFooterComponent: React.FC<Props> = ({
 
     setIsStartDeleting(true);
 
-    const promises = completedTodos.map(todo => onDeleteTodo(todo.id));
+    const promises = completedTodos.map(todo => deleteTodo(todo.id));
 
     try {
       await Promise.all(promises);
@@ -74,14 +66,14 @@ const TodoFooterComponent: React.FC<Props> = ({
       </span>
 
       <nav className="filter" data-cy="Filter">
-        {filters.map(({ label, href, dataCy, filter }) => (
+        {filters.map(({ label, href, dataCy, filter: filterItem }) => (
           <a
-            key={filter}
+            key={filterItem}
             href={href}
             data-cy={dataCy}
-            onClick={() => onChangeFilter(filter)}
+            onClick={() => setFilter(filterItem)}
             className={classNames('filter__link', {
-              selected: currentFilter === filter,
+              selected: filter === filterItem,
             })}
           >
             {label}
@@ -101,5 +93,3 @@ const TodoFooterComponent: React.FC<Props> = ({
     </footer>
   );
 };
-
-export const TodoFooter = React.memo(TodoFooterComponent);

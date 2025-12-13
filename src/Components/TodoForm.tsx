@@ -1,27 +1,36 @@
-import React, { useContext, useState } from 'react';
-import { Todo } from '../types/Todo';
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { filterTodo } from '../Services/Todo';
 import classNames from 'classnames';
 import { FilterTodo } from '../types/FilterTodo';
-import { TodoContext } from '../Contexts/TodoContext';
+import { useTodoData } from '../hooks/useTodoData';
+import { useTodoUI } from '../hooks/useTodoUI';
 
-type Props = {
-  todos: Todo[];
-  inputRef?: React.RefObject<HTMLInputElement>;
-  onSubmit: (title: string) => Promise<void>;
-  onError: (message: string, isServerError: boolean) => void;
+export type Props = {};
+
+export type TodoFormRef = {
+  focus: () => void;
 };
 
-const TodoFormComponent: React.FC<Props> = ({
-  todos,
-  onSubmit,
-  onError,
-  inputRef,
-}) => {
+const TodoFormComponent = forwardRef<TodoFormRef, Props>((_props, ref) => {
   const [query, setQuery] = useState('');
   const [isSubmited, setIsSubmited] = useState(false);
   const [isStartUpdate, setIsStartUpdate] = useState(false);
-  const { onUpdateTodo: onCompleteTodo } = useContext(TodoContext);
+  const { todos, addTodo, updateTodo } = useTodoData();
+
+  const { addErrorMessage } = useTodoUI();
+
+  const localInputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      localInputRef.current?.focus();
+    },
+  }));
 
   const completedTodos = React.useMemo(
     () => filterTodo(todos, FilterTodo.completed),
@@ -41,14 +50,14 @@ const TodoFormComponent: React.FC<Props> = ({
     const normailedQuery = query.trim();
 
     if (!normailedQuery) {
-      onError('Title should not be empty', false);
+      addErrorMessage('Title should not be empty', false);
 
       return;
     }
 
     try {
       setIsSubmited(true);
-      await onSubmit(normailedQuery);
+      await addTodo(normailedQuery);
       resetForm();
     } catch {
     } finally {
@@ -67,7 +76,7 @@ const TodoFormComponent: React.FC<Props> = ({
     setIsStartUpdate(true);
 
     const promises = todosToUpdate.map(todo =>
-      onCompleteTodo(todo.id, { completed: action }),
+      updateTodo(todo.id, { completed: action }),
     );
 
     try {
@@ -94,7 +103,7 @@ const TodoFormComponent: React.FC<Props> = ({
       <form onSubmit={handleSubmit}>
         <input
           onChange={event => handleChangeInput(event)}
-          ref={inputRef}
+          ref={localInputRef}
           value={query}
           data-cy="NewTodoField"
           type="text"
@@ -105,6 +114,8 @@ const TodoFormComponent: React.FC<Props> = ({
       </form>
     </header>
   );
-};
+});
+
+TodoFormComponent.displayName = 'TodoFormComponent';
 
 export const TodoForm = React.memo(TodoFormComponent);

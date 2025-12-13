@@ -1,15 +1,10 @@
 import classNames from 'classnames';
 import React from 'react';
+import { useTodoUI } from '../hooks/useTodoUI';
 
-type Props = {
-  errorMessage?: string;
-  onReset: () => void;
-};
+export const ErrorNotification: React.FC = () => {
+  const { errorMessage, clearErrorMessage } = useTodoUI();
 
-const ErrorNotificationComponent: React.FC<Props> = ({
-  errorMessage = '',
-  onReset,
-}) => {
   return (
     <div
       data-cy="ErrorNotification"
@@ -19,14 +14,12 @@ const ErrorNotificationComponent: React.FC<Props> = ({
       )}
     >
       <button
-        onClick={onReset}
+        onClick={clearErrorMessage}
         data-cy="HideErrorButton"
         type="button"
         className="delete"
       />
-      {errorMessage}
+      {errorMessage?.message}
     </div>
   );
 };
-
-export const ErrorNotification = React.memo(ErrorNotificationComponent);

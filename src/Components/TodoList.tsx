@@ -1,25 +1,16 @@
-import React, { useState } from 'react';
-import { Todo } from '../types/Todo';
-import { TodoItem } from './TodoItem';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
+import React from 'react';
+import { TodoItem } from './TodoItem';
+import { useTodoData } from '../hooks/useTodoData';
 
-type Props = {
-  todos: Todo[];
-  tempTodo: Todo | null;
-  loadingIds: number[];
-};
-
-const TodoListComponent: React.FC<Props> = ({
-  todos,
-  tempTodo,
-  loadingIds,
-}) => {
-  const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
+export const TodoList: React.FC = () => {
+  const { filteredTodos, loadingIds, tempTodo } = useTodoData();
 
   return (
     <section className="todoapp__main" data-cy="TodoList">
       <TransitionGroup component={null}>
-        {todos.map(todo => {
+        {filteredTodos.map(todo => {
           const isLoading = loadingIds.includes(todo.id);
 
           return (
@@ -29,12 +20,7 @@ const TodoListComponent: React.FC<Props> = ({
               classNames="item"
               appear={true}
             >
-              <TodoItem
-                todo={todo}
-                selectedTodoId={selectedTodoId}
-                isLoading={isLoading}
-                onSelect={setSelectedTodoId}
-              />
+              <TodoItem todo={todo} isLoading={isLoading} />
             </CSSTransition>
           );
         })}
@@ -48,5 +34,3 @@ const TodoListComponent: React.FC<Props> = ({
     </section>
   );
 };
-
-export const TodoList = React.memo(TodoListComponent);

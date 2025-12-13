@@ -1,23 +1,17 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import React, { useContext, useState, useEffect, useRef } from 'react';
-import { TodoContext } from '../Contexts/TodoContext';
+import React, { useState, useEffect, useRef } from 'react';
 import { Todo } from '../types/Todo';
 import classNames from 'classnames';
+import { useTodoData } from '../hooks/useTodoData';
 
 type Props = {
   todo: Todo;
-  selectedTodoId?: number | null;
   isLoading?: boolean;
-  onSelect?: (todoId: number | null) => void;
 };
 
-const TodoItemComponent: React.FC<Props> = ({
-  todo,
-  selectedTodoId,
-  isLoading = false,
-  onSelect = () => {},
-}) => {
-  const { onDeleteTodo, onUpdateTodo } = useContext(TodoContext);
+const TodoItemComponent: React.FC<Props> = ({ todo, isLoading = false }) => {
+  const { selectedTodoId, setSelectedTodoId, deleteTodo, updateTodo } =
+    useTodoData();
   const [query, setQuery] = useState(todo.title);
   const [isSubmited, setIsSubmited] = useState(false);
 
@@ -33,15 +27,15 @@ const TodoItemComponent: React.FC<Props> = ({
     const trimmed = query.trim();
 
     if (trimmed === todo.title) {
-      onSelect(null);
+      setSelectedTodoId(null);
 
       return;
     }
 
     if (!trimmed) {
       try {
-        await onDeleteTodo(todoId);
-        onSelect(null);
+        await deleteTodo(todoId);
+        setSelectedTodoId(null);
       } catch {}
 
       return;
@@ -49,8 +43,8 @@ const TodoItemComponent: React.FC<Props> = ({
 
     try {
       setIsSubmited(true);
-      await onUpdateTodo(todoId, { title: trimmed });
-      onSelect(null);
+      await updateTodo(todoId, { title: trimmed });
+      setSelectedTodoId(null);
     } catch {
     } finally {
       setIsSubmited(false);
@@ -73,7 +67,7 @@ const TodoItemComponent: React.FC<Props> = ({
   const handleKeyUp = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       setQuery(todo.title);
-      onSelect(null);
+      setSelectedTodoId(null);
     }
   };
 
@@ -91,7 +85,7 @@ const TodoItemComponent: React.FC<Props> = ({
           type="checkbox"
           className="todo__status"
           checked={todo.completed}
-          onChange={() => onUpdateTodo(todo.id, { completed: !todo.completed })}
+          onChange={() => updateTodo(todo.id, { completed: !todo.completed })}
           disabled={isLoading}
         />
       </label>
@@ -101,7 +95,7 @@ const TodoItemComponent: React.FC<Props> = ({
           <span
             data-cy="TodoTitle"
             className="todo__title"
-            onDoubleClick={() => onSelect?.(todo.id)}
+            onDoubleClick={() => setSelectedTodoId?.(todo.id)}
           >
             {todo.title}
           </span>
@@ -110,7 +104,7 @@ const TodoItemComponent: React.FC<Props> = ({
             type="button"
             data-cy="TodoDelete"
             className="todo__remove"
-            onClick={() => onDeleteTodo(todo.id)}
+            onClick={() => deleteTodo(todo.id)}
             disabled={isLoading}
           >
             ×
